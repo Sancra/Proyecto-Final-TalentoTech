@@ -1,208 +1,175 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QDialog, QDialogButtonBox, QInputDialog
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 import operaciones_notas as op
 
-class VentanaReclamo(QDialog):
-    def __init__(self, estudiante, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle('Reclamar Nota')
-        self.setGeometry(400, 400, 800, 600)
-
-        self.estudiante = estudiante  # Guardar el estudiante recibido como atributo
-
-        self.layout = QVBoxLayout(self)
-
-        self.label_materia = QLabel('Materia:')
-        self.input_materia = QLineEdit()
-        self.layout.addWidget(self.label_materia)
-        self.layout.addWidget(self.input_materia)
-
-        self.label_mensaje = QLabel('Mensaje de reclamo:')
-        self.input_mensaje = QTextEdit()
-        self.layout.addWidget(self.label_mensaje)
-        self.layout.addWidget(self.input_mensaje)
-
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.accepted.connect(self.guardar_reclamo)
-        button_box.rejected.connect(self.close)
-        self.layout.addWidget(button_box)
-
-    def guardar_reclamo(self):
-        materia = self.input_materia.text().strip()
-        mensaje = self.input_mensaje.toPlainText().strip()
-        self.accept()  # Cerrar la ventana de reclamo
-        # Llamar a la función para procesar el reclamo utilizando el estudiante guardado
-        op.reclamar_nota(self.estudiante, materia, mensaje)
-
-
-class MainWindow(QWidget):
+class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.maestro = None  # Inicializar maestro como None al principio
-        self.initUI()
 
-    def initUI(self):
-        self.setWindowTitle('Gestión de Notas')
-        self.setGeometry(400, 400, 800, 600)
+        self.title('Gestión de Notas')
+        self.geometry('400x300')
 
-        self.layout = QVBoxLayout(self)
+        self.current_user = None  # Variable para almacenar el usuario actual (maestro o estudiante)
 
-        self.label_rol = QLabel('Ingrese su rol (maestro/estudiante):')
-        self.input_rol = QLineEdit()
-        self.layout.addWidget(self.label_rol)
-        self.layout.addWidget(self.input_rol)
-
-        self.label_nombre = QLabel('Ingrese su nombre:')
-        self.input_nombre = QLineEdit()
-        self.layout.addWidget(self.label_nombre)
-        self.layout.addWidget(self.input_nombre)
-
-        self.btn_ingresar = QPushButton('Ingresar')
-        self.btn_ingresar.clicked.connect(self.ingresar)
-        self.layout.addWidget(self.btn_ingresar)
-
-    def ingresar(self):
-        rol = self.input_rol.text().strip().lower()
-        nombre = self.input_nombre.text().strip()
-
-        if rol == 'maestro':
-            self.maestro = {'nombre': 'Profe Carlos', 'estudiantes': [
+        # Definir al maestro Carlos con dos estudiantes
+        self.maestro = {
+            'nombre': 'Carlos', 
+            'estudiantes': [
                 {'nombre': "Juan", 'notas': {"Matemáticas": 90, "Historia": 85}},
                 {'nombre': "María", 'notas': {"Matemáticas": 78, "Historia": 92}}
-            ]}
-            if nombre == self.maestro['nombre']:
-                self.mostrar_menu_maestro(self.maestro)
-            else:
-                self.mostrar_mensaje('Nombre de maestro incorrecto')
-        elif rol == 'estudiante':
-            if self.maestro is not None:
-                estudiante = op.buscar_estudiante(self.maestro, nombre)
-                if estudiante:
-                    self.mostrar_menu_estudiante(estudiante)
-                else:
-                    self.mostrar_mensaje('Nombre de estudiante incorrecto')
-            else:
-                self.mostrar_mensaje('Primero ingrese como maestro para continuar')
+            ]
+        }
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.clear_widgets()
+
+        self.label_usuario = tk.Label(self, text='USUARIO', font=('Helvetica', 16, 'bold'))
+        self.label_usuario.pack(pady=10)
+
+        self.btn_avanzar = tk.Button(self, text='Avanzar', command=self.avanzar)
+        self.btn_avanzar.pack(side=tk.RIGHT, padx=10, pady=10)
+
+        self.btn_volver = tk.Button(self, text='Volver', command=self.volver)
+        self.btn_volver.pack(side=tk.RIGHT, padx=10, pady=10)
+
+    def avanzar(self):
+        self.clear_widgets()
+        nombre_usuario = simpledialog.askstring('Ingresar Nombre', 'Nombre:')
+        if not nombre_usuario:
+            return
+        
+        if nombre_usuario == self.maestro['nombre']:
+            self.current_user = 'maestro'
+            self.mostrar_menu_maestro()
         else:
-            self.mostrar_mensaje('Rol no válido')
+            estudiante = op.buscar_estudiante(self.maestro, nombre_usuario)
+            if estudiante:
+                self.current_user = estudiante
+                self.mostrar_menu_estudiante()
+            else:
+                self.mostrar_mensaje('Usuario no registrado')
 
-    def mostrar_menu_maestro(self, maestro):
-        self.limpiar_layout()
+    def volver(self):
+        self.label_usuario.config(text='USUARIO')
+        self.clear_widgets()
+        self.create_widgets()
 
-        self.label_opciones = QLabel('Opciones:')
-        self.layout.addWidget(self.label_opciones)
+    def mostrar_menu_maestro(self):
+        self.clear_widgets()
 
-        self.btn_ver_notas = QPushButton('Ver notas de estudiantes')
-        self.btn_ver_notas.clicked.connect(lambda: self.mostrar_resultado(op.ver_notas_estudiantes(maestro)))
-        self.layout.addWidget(self.btn_ver_notas)
+        self.label_opciones = tk.Label(self, text='Opciones:')
+        self.label_opciones.pack(pady=10)
 
-        self.btn_cambiar_nota = QPushButton('Cambiar nota de estudiante')
-        self.btn_cambiar_nota.clicked.connect(self.cambiar_nota)
-        self.layout.addWidget(self.btn_cambiar_nota)
+        self.btn_ver_notas = tk.Button(self, text='Ver notas de estudiantes', command=self.ver_notas_estudiantes)
+        self.btn_ver_notas.pack()
 
-        self.btn_cargar_notas = QPushButton('Cargar notas desde archivo')
-        self.btn_cargar_notas.clicked.connect(self.cargar_notas)
-        self.layout.addWidget(self.btn_cargar_notas)
+        self.btn_cambiar_nota = tk.Button(self, text='Cambiar nota de estudiante', command=self.cambiar_nota)
+        self.btn_cambiar_nota.pack()
 
-        self.btn_ver_reclamos = QPushButton('Ver reclamos de estudiantes')
-        self.btn_ver_reclamos.clicked.connect(lambda: self.mostrar_resultado(op.ver_reclamos(maestro)))
-        self.layout.addWidget(self.btn_ver_reclamos)
+        self.btn_cargar_notas = tk.Button(self, text='Cargar notas desde archivo', command=self.cargar_notas)
+        self.btn_cargar_notas.pack()
 
-        self.btn_agregar_estudiante = QPushButton('Agregar estudiante')
-        self.btn_agregar_estudiante.clicked.connect(self.agregar_estudiante)
-        self.layout.addWidget(self.btn_agregar_estudiante)
+        self.btn_ver_reclamos = tk.Button(self, text='Ver reclamos de estudiantes', command=self.ver_reclamos)
+        self.btn_ver_reclamos.pack()
 
-        self.btn_quitar_estudiante = QPushButton('Quitar estudiante')
-        self.btn_quitar_estudiante.clicked.connect(self.quitar_estudiante)
-        self.layout.addWidget(self.btn_quitar_estudiante)
+        self.btn_agregar_estudiante = tk.Button(self, text='Agregar estudiante', command=self.agregar_estudiante)
+        self.btn_agregar_estudiante.pack()
 
-        self.btn_salir = QPushButton('Salir')
-        self.btn_salir.clicked.connect(self.volver_inicio)
-        self.layout.addWidget(self.btn_salir)
+        self.btn_quitar_estudiante = tk.Button(self, text='Quitar estudiante', command=self.quitar_estudiante)
+        self.btn_quitar_estudiante.pack()
 
-    def mostrar_menu_estudiante(self, estudiante):
-        self.limpiar_layout()
+        self.btn_volver = tk.Button(self, text='Volver', command=self.volver)
+        self.btn_volver.pack()
 
-        self.label_opciones = QLabel('Opciones:')
-        self.layout.addWidget(self.label_opciones)
+    def mostrar_menu_estudiante(self):
+        self.clear_widgets()
 
-        self.btn_ver_notas = QPushButton('Ver mis notas')
-        self.btn_ver_notas.clicked.connect(lambda: self.mostrar_resultado(op.ver_notas(estudiante)))
-        self.layout.addWidget(self.btn_ver_notas)
+        self.label_opciones = tk.Label(self, text='Opciones:')
+        self.label_opciones.pack(pady=10)
 
-        self.btn_reclamar_nota = QPushButton('Reclamar nota')
-        self.btn_reclamar_nota.clicked.connect(lambda: self.abrir_ventana_reclamo(estudiante))
-        self.layout.addWidget(self.btn_reclamar_nota)
+        self.btn_ver_notas = tk.Button(self, text='Ver mis notas', command=self.ver_notas_estudiante)
+        self.btn_ver_notas.pack()
 
-        self.btn_salir = QPushButton('Salir')
-        self.btn_salir.clicked.connect(self.volver_inicio)
-        self.layout.addWidget(self.btn_salir)
+        self.btn_reclamar_nota = tk.Button(self, text='Reclamar nota', command=self.reclamar_nota)
+        self.btn_reclamar_nota.pack()
 
-    def abrir_ventana_reclamo(self, estudiante):
-        ventana_reclamo = VentanaReclamo(estudiante, self)
-        if ventana_reclamo.exec_():
-            # Si el reclamo se guarda correctamente, puedes realizar alguna acción adicional si lo necesitas
-            pass
+        self.btn_volver = tk.Button(self, text='Volver', command=self.volver)
+        self.btn_volver.pack()
+
+    def ver_notas_estudiantes(self):
+        self.clear_widgets()
+        resultado = op.ver_notas_estudiantes(self.maestro)
+        self.mostrar_resultado(resultado)
+
+    def ver_notas_estudiante(self):
+        self.clear_widgets()
+        resultado = op.ver_notas(self.current_user)
+        self.mostrar_resultado(resultado)
 
     def cambiar_nota(self):
-        if self.maestro is not None:
-            nombre_estudiante, ok = QInputDialog.getText(self, 'Cambiar nota', 'Nombre del estudiante:')
-            if ok and nombre_estudiante:
-                materia, ok = QInputDialog.getText(self, 'Cambiar nota', 'Materia:')
-                if ok and materia:
-                    nueva_nota, ok = QInputDialog.getText(self, 'Cambiar nota', 'Nueva nota:')
-                    if ok and nueva_nota:
-                        op.cambiar_nota(self.maestro, nombre_estudiante, materia, nueva_nota)
-                        self.mostrar_mensaje(f'Nota cambiada para {nombre_estudiante} en {materia}')
-        else:
-            self.mostrar_mensaje('Primero ingrese como maestro para cambiar notas')
+        nombre_estudiante = simpledialog.askstring('Cambiar Nota', 'Nombre del estudiante:')
+        if nombre_estudiante:
+            materia = simpledialog.askstring('Cambiar Nota', 'Materia:')
+            if materia:
+                nueva_nota = simpledialog.askstring('Cambiar Nota', 'Nueva nota:')
+                if nueva_nota:
+                    op.cambiar_nota(self.maestro, nombre_estudiante, materia, nueva_nota)
+                    messagebox.showinfo('Cambiar Nota', 'Nota cambiada exitosamente.')
+                    self.volver()
 
     def cargar_notas(self):
-        if self.maestro is not None:
-            archivo, ok = QInputDialog.getText(self, 'Cargar notas', 'Ruta del archivo Excel:')
-            if ok and archivo:
-                op.cargar_notas(self.maestro, archivo)
-                self.mostrar_mensaje(f'Notas cargadas desde {archivo}')
-        else:
-            self.mostrar_mensaje('Primero ingrese como maestro para cargar notas')
+        archivo = simpledialog.askstring('Cargar Notas', 'Ruta del archivo Excel:')
+        if archivo:
+            op.cargar_notas(self.maestro, archivo)
+            messagebox.showinfo('Cargar Notas', 'Notas cargadas exitosamente.')
+            self.volver()
 
     def agregar_estudiante(self):
-        if self.maestro is not None:
-            nombre_estudiante, ok = QInputDialog.getText(self, 'Agregar estudiante', 'Nombre del nuevo estudiante:')
-            if ok and nombre_estudiante:
-                op.agregar_estudiante(self.maestro, nombre_estudiante)
-                self.mostrar_mensaje(f'Estudiante {nombre_estudiante} agregado')
-        else:
-            self.mostrar_mensaje('Primero ingrese como maestro para agregar estudiantes')
+        nombre_estudiante = simpledialog.askstring('Agregar Estudiante', 'Nombre del nuevo estudiante:')
+        if nombre_estudiante:
+            op.agregar_estudiante(self.maestro, nombre_estudiante)
+            messagebox.showinfo('Agregar Estudiante', 'Estudiante agregado exitosamente.')
+            self.volver()
 
     def quitar_estudiante(self):
-        if self.maestro is not None:
-            nombre_estudiante, ok = QInputDialog.getText(self, 'Quitar estudiante', 'Nombre del estudiante a eliminar:')
-            if ok and nombre_estudiante:
-                op.quitar_estudiante(self.maestro, nombre_estudiante)
-                self.mostrar_mensaje(f'Estudiante {nombre_estudiante} eliminado')
-        else:
-            self.mostrar_mensaje('Primero ingrese como maestro para quitar estudiantes')
+        nombre_estudiante = simpledialog.askstring('Quitar Estudiante', 'Nombre del estudiante a eliminar:')
+        if nombre_estudiante:
+            op.quitar_estudiante(self.maestro, nombre_estudiante)
+            messagebox.showinfo('Quitar Estudiante', 'Estudiante eliminado exitosamente.')
+            self.volver()
 
-    def limpiar_layout(self):
-        for i in reversed(range(self.layout.count())):
-            widget = self.layout.itemAt(i).widget()
-            if widget is not None:
-                widget.deleteLater()
+    def reclamar_nota(self):
+        materia = simpledialog.askstring('Reclamar Nota', 'Materia:')
+        if materia:
+            mensaje = simpledialog.askstring('Reclamar Nota', 'Mensaje de reclamo:')
+            if mensaje:
+                op.reclamar_nota(self.current_user, materia, mensaje)
+                messagebox.showinfo('Reclamar Nota', 'Nota reclamada exitosamente.')
+                self.volver()
 
     def mostrar_resultado(self, resultado):
-        self.layout.addWidget(QTextEdit(str(resultado)))
+        self.clear_widgets()
+        text_area = tk.Text(self)
+        text_area.insert(tk.END, str(resultado))
+        text_area.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
+
+        self.btn_volver = tk.Button(self, text='Volver', command=self.volver)
+        self.btn_volver.pack()
 
     def mostrar_mensaje(self, mensaje):
-        self.limpiar_layout()
-        self.layout.addWidget(QLabel(mensaje))
+        self.clear_widgets()
+        label_mensaje = tk.Label(self, text=mensaje)
+        label_mensaje.pack(padx=20, pady=20)
 
-    def volver_inicio(self):
-        self.limpiar_layout()
-        self.initUI()
+        self.btn_volver = tk.Button(self, text='Volver', command=self.volver)
+        self.btn_volver.pack()
+
+    def clear_widgets(self):
+        for widget in self.winfo_children():
+            widget.pack_forget()
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    mainWindow = MainWindow()
-    mainWindow.show()
-    sys.exit(app.exec_())
+    app = MainWindow()
+    app.mainloop()
