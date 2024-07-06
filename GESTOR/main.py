@@ -1,3 +1,6 @@
+import tkinter as tk
+from tkinter import messagebox
+import operaciones_notas as op
 import interfaz
 
 # Ejemplo de múltiples profesores
@@ -62,4 +65,4 @@ profesores = [
 
 if __name__ == "__main__":
     # Ejemplo: Inicializar la interfaz con el primer profesor de la lista
-    interfaz.Interfaz(profesores[0])
+    interfaz_principal = interfaz.Interfaz(profesores[0], profesores)

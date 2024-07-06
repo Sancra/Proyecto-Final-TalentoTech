@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import messagebox
 import operaciones_notas as op
 
 class Interfaz:
@@ -24,7 +24,7 @@ class Interfaz:
         self.entry_usuario = tk.Entry(self.root, font=('Helvetica', 14))
         self.entry_usuario.pack(pady=5)
 
-        self.btn_ok = tk.Button(self.root, text='ok', font=('Helvetica', 14), command=self.ok)
+        self.btn_ok = tk.Button(self.root, text='OK', font=('Helvetica', 14), command=self.ok)
         self.btn_ok.pack(pady=5)
 
         self.label_rol = tk.Label(self.root, text='ROL', font=('Helvetica', 16))
@@ -36,6 +36,11 @@ class Interfaz:
 
         self.radio_estudiante = tk.Radiobutton(self.root, text='ESTUDIANTE', variable=self.rol_var, value='ESTUDIANTE', font=('Helvetica', 14))
         self.radio_estudiante.pack(anchor=tk.W)
+
+        # Botón para regresar al menú principal
+        self.btn_regresar = tk.Button(self.root, text='Regresar al Menú Principal', font=('Helvetica', 14), command=self.mostrar_menu_principal)
+        self.btn_regresar.pack(pady=5)
+        self.btn_regresar.pack_forget()  # Inicialmente oculto
 
     def clear_widgets(self):
         for widget in self.root.winfo_children():
@@ -57,6 +62,34 @@ class Interfaz:
                 self.mostrar_menu_estudiante()
             else:
                 messagebox.showerror("Error", "Nombre de estudiante incorrecto")
+
+    def mostrar_menu_principal(self):
+        self.clear_widgets()
+
+        self.label_titulo = tk.Label(self.root, text='GESTION DE NOTAS', font=('Helvetica', 20, 'bold'))
+        self.label_titulo.pack(pady=10)
+
+        self.label_usuario = tk.Label(self.root, text='USUARIO', font=('Helvetica', 16))
+        self.label_usuario.pack()
+
+        self.entry_usuario = tk.Entry(self.root, font=('Helvetica', 14))
+        self.entry_usuario.pack(pady=5)
+
+        self.btn_ok = tk.Button(self.root, text='OK', font=('Helvetica', 14), command=self.ok)
+        self.btn_ok.pack(pady=5)
+
+        self.label_rol = tk.Label(self.root, text='ROL', font=('Helvetica', 16))
+        self.label_rol.pack(pady=10)
+
+        self.rol_var = tk.StringVar(value='MAESTRO')
+        self.radio_maestro = tk.Radiobutton(self.root, text='MAESTRO', variable=self.rol_var, value='MAESTRO', font=('Helvetica', 14))
+        self.radio_maestro.pack(anchor=tk.W)
+
+        self.radio_estudiante = tk.Radiobutton(self.root, text='ESTUDIANTE', variable=self.rol_var, value='ESTUDIANTE', font=('Helvetica', 14))
+        self.radio_estudiante.pack(anchor=tk.W)
+
+        # Mostramos el botón de regresar al menú principal
+        self.btn_regresar.pack(pady=5)
 
     def mostrar_menu_maestro(self):
         self.clear_widgets()
@@ -108,67 +141,74 @@ class Interfaz:
         self.btn_actualizar_notas = tk.Button(self.root, text='Actualizar Notas', font=('Helvetica', 12), command=self.actualizar_notas)
         self.btn_actualizar_notas.pack(pady=5)
 
+        # Mostramos el botón de regresar al menú principal
+        self.btn_regresar.pack(pady=5)
+
     def agregar_estudiante(self):
-        nombre = self.entry_nombre_estudiante.get()
-        op.agregar_estudiante(self.maestro, nombre)
-        messagebox.showinfo("Información", f"Estudiante {nombre} agregado exitosamente.")
+        nombre_estudiante = self.entry_nombre_estudiante.get()
+        op.agregar_estudiante(self.maestro, nombre_estudiante)
+        messagebox.showinfo("Éxito", f"Estudiante '{nombre_estudiante}' agregado correctamente")
 
     def cambiar_nota(self):
-        nombre = self.entry_nombre_nota.get()
+        nombre_estudiante = self.entry_nombre_nota.get()
         materia = self.entry_materia_nota.get()
         nueva_nota = float(self.entry_nueva_nota.get())
-        op.cambiar_nota(self.maestro, nombre, materia, nueva_nota)
-        messagebox.showinfo("Información", f"Nota cambiada exitosamente para {nombre} en {materia}.")
-
-    def actualizar_notas(self):
-        # Implementar lógica para actualizar notas
-        messagebox.showinfo("Información", "Notas actualizadas exitosamente.")
+        op.cambiar_nota(self.maestro, nombre_estudiante, materia, nueva_nota)
+        messagebox.showinfo("Éxito", f"Nota de '{materia}' cambiada correctamente para '{nombre_estudiante}'")
 
     def ver_reclamos(self):
         reclamos = op.ver_reclamos(self.maestro)
-        reclamos_str = "\n".join(reclamos)
-        messagebox.showinfo("Reclamos", reclamos_str)
+        messagebox.showinfo("Reclamos", "\n".join(reclamos))
+
+    def actualizar_notas(self):
+        # Esta función podría incluir lógica adicional para actualizar las notas en la interfaz.
+        messagebox.showinfo("Éxito", "Notas actualizadas correctamente")
 
     def mostrar_menu_estudiante(self):
         self.clear_widgets()
 
-        self.label_estudiante = tk.Label(self.root, text=f'Bienvenido {self.estudiante["nombre"]}', font=('Helvetica', 14))
-        self.label_estudiante.pack(pady=5)
+        self.label_bienvenida_estudiante = tk.Label(self.root, text=f'Bienvenido, {self.estudiante["nombre"]}', font=('Helvetica', 16))
+        self.label_bienvenida_estudiante.pack(pady=10)
 
-        self.label_notas = tk.Label(self.root, text='Tus Notas:', font=('Helvetica', 14))
-        self.label_notas.pack(pady=5)
+        self.label_ver_notas = tk.Label(self.root, text='Ver Notas', font=('Helvetica', 14))
+        self.label_ver_notas.pack(pady=5)
 
-        notas = op.ver_notas(self.estudiante)
-        for materia, nota in notas.items():
-            tk.Label(self.root, text=f'{materia}: {nota}', font=('Helvetica', 12)).pack()
+        self.btn_ver_notas = tk.Button(self.root, text='Ver Notas', font=('Helvetica', 12), command=self.ver_notas_estudiante)
+        self.btn_ver_notas.pack(pady=5)
 
-        self.label_reclamo = tk.Label(self.root, text='Reclamar Nota:', font=('Helvetica', 14))
-        self.label_reclamo.pack(pady=5)
+        self.label_reclamar_nota = tk.Label(self.root, text='Reclamar Nota', font=('Helvetica', 14))
+        self.label_reclamar_nota.pack(pady=5)
 
-        self.frame_reclamo = tk.Frame(self.root)
-        self.frame_reclamo.pack(pady=5)
+        self.frame_reclamar_nota = tk.Frame(self.root)
+        self.frame_reclamar_nota.pack(pady=5)
 
-        tk.Label(self.frame_reclamo, text='Materia', font=('Helvetica', 12)).grid(row=0, column=0, padx=10)
-        self.entry_materia_reclamo = tk.Entry(self.frame_reclamo, font=('Helvetica', 12))
-        self.entry_materia_reclamo.grid(row=1, column=0, padx=10, pady=2)
+        tk.Label(self.frame_reclamar_nota, text='Materia', font=('Helvetica', 12)).grid(row=0, column=0, padx=10)
+        self.entry_materia_reclamo = tk.Entry(self.frame_reclamar_nota, font=('Helvetica', 12))
+        self.entry_materia_reclamo.grid(row=0, column=1, padx=10, pady=2)
 
-        tk.Label(self.frame_reclamo, text='Reclamo', font=('Helvetica', 12)).grid(row=0, column=1, padx=10)
-        self.entry_mensaje_reclamo = tk.Entry(self.frame_reclamo, font=('Helvetica', 12))
+        tk.Label(self.frame_reclamar_nota, text='Mensaje', font=('Helvetica', 12)).grid(row=1, column=0, padx=10)
+        self.entry_mensaje_reclamo = tk.Entry(self.frame_reclamar_nota, font=('Helvetica', 12))
         self.entry_mensaje_reclamo.grid(row=1, column=1, padx=10, pady=2)
 
-        self.btn_enviar_reclamo = tk.Button(self.frame_reclamo, text='Enviar Reclamo', font=('Helvetica', 12), command=self.enviar_reclamo)
-        self.btn_enviar_reclamo.grid(row=1, column=2, padx=10, pady=2)
+        self.btn_reclamar_nota = tk.Button(self.frame_reclamar_nota, text='Reclamar Nota', font=('Helvetica', 12), command=self.reclamar_nota)
+        self.btn_reclamar_nota.grid(row=2, column=0, columnspan=2, padx=10, pady=5)
 
-    def enviar_reclamo(self):
+        # Mostramos el botón de regresar al menú principal
+        self.btn_regresar.pack(pady=5)
+
+    def ver_notas_estudiante(self):
+        notas = op.ver_notas(self.estudiante)
+        messagebox.showinfo(f'Notas de {self.estudiante["nombre"]}', "\n".join(f'{materia}: {nota}' for materia, nota in notas.items()))
+
+    def reclamar_nota(self):
         materia = self.entry_materia_reclamo.get()
         mensaje = self.entry_mensaje_reclamo.get()
-        resultado = op.reclamar_nota(self.estudiante, materia, mensaje)
-        messagebox.showinfo("Información", resultado)
+        mensaje_enviado = op.reclamar_nota(self.estudiante, materia, mensaje)
+        messagebox.showinfo("Éxito", mensaje_enviado)
 
-import interfaz
-
-# Ejemplo de múltiples profesores
-profesores = [
+if __name__ == '__main__':
+    # Ejemplo de múltiples profesores
+    profesores = [
     {
         "nombre": "Prof. Carlos",
         "estudiantes": [
@@ -227,6 +267,5 @@ profesores = [
     }
 ]
 
-if __name__ == "__main__":
     # Ejemplo: Inicializar la interfaz con el primer profesor de la lista
-    interfaz.Interfaz(profesores[0])
+    interfaz_principal = Interfaz(profesores[0])
