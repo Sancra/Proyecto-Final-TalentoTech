@@ -165,7 +165,6 @@ class Interfaz:
         resultado = op.reclamar_nota(self.estudiante, materia, mensaje)
         messagebox.showinfo("Información", resultado)
 
-# Ejemplo de maestro para propósitos de prueba
 import interfaz
 
 # Ejemplo de múltiples profesores
