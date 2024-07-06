@@ -66,3 +66,4 @@
 # if __name__ == "__main__":
 #     # Ejemplo: Inicializar la interfaz con el primer profesor de la lista
 #     interfaz_principal = interfaz.Interfaz(profesores[0], profesores)
+and
